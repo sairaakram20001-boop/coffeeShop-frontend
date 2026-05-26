@@ -26,6 +26,7 @@ const fallbackImage = 'https://images.unsplash.com/photo-1518057111178-44a106bad
 
 export default function CatalogPage({ title, subtitle, categoryKeywords }: Props) {
   const [products, setProducts] = useState<Product[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
   const { addToCart, setIsOpen } = useCart()
   const { notify } = useToast()
   const navigate = useNavigate()
@@ -39,8 +40,12 @@ export default function CatalogPage({ title, subtitle, categoryKeywords }: Props
           imageUrl: product.imageUrl ?? product.imageURL ?? product.ImageUrl,
         }))
         setProducts(mappedProducts)
+        setLoadError(null)
       })
-      .catch(() => setProducts([]))
+      .catch(() => {
+        setProducts([])
+        setLoadError('Unable to connect to backend. Please start backend and refresh.')
+      })
   }, [])
 
   const filteredProducts = useMemo(() => {
@@ -93,7 +98,8 @@ export default function CatalogPage({ title, subtitle, categoryKeywords }: Props
           </article>
         ))}
       </section>
-      {filteredProducts.length === 0 && (
+      {loadError && <p className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">{loadError}</p>}
+      {!loadError && filteredProducts.length === 0 && (
         <p className="mt-8 rounded-2xl bg-white p-5 text-[var(--rosewood)]">No products available in this catalog yet.</p>
       )}
     </main>

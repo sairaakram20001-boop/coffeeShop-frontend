@@ -25,6 +25,7 @@ const fallbackImage = 'https://images.unsplash.com/photo-1518057111178-44a106bad
 export default function ShopPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all')
   const [searchParams] = useSearchParams()
   const location = useLocation()
@@ -38,24 +39,26 @@ export default function ShopPage() {
     (location.state as OrderLocationState)?.orderMessage ?? 'Thanks for your order.',
   )
 
-  const loadShopData = useCallback(async () => {
+  const mapProducts = (items: Product[]) =>
+    items.map((product) => ({
+      ...product,
+      imageUrl: product.imageUrl ?? product.imageURL ?? product.ImageUrl,
+    }))
+
+  const loadCategories = useCallback(async () => {
     try {
-      const [productRes, categoryRes] = await Promise.all([api.get('/api/product'), api.get('/api/category')])
-      const mappedProducts = ((productRes.data ?? []) as Product[]).map((product) => ({
-        ...product,
-        imageUrl: product.imageUrl ?? product.imageURL ?? product.ImageUrl,
-      }))
-      setProducts(mappedProducts)
+      const categoryRes = await api.get('/api/category')
       setCategories(categoryRes.data ?? [])
+      setLoadError(null)
     } catch {
-      setProducts([])
       setCategories([])
+      setLoadError('Unable to connect to backend. Please start backend and try again.')
     }
   }, [])
 
   useEffect(() => {
-    loadShopData()
-  }, [loadShopData])
+    loadCategories()
+  }, [loadCategories])
 
   useEffect(() => {
     refreshCart()
@@ -77,18 +80,43 @@ export default function ShopPage() {
 
     setDialogMessage(orderState.orderMessage ?? 'Thanks for your order.')
     setShowThanksDialog(true)
-    loadShopData()
-  }, [location.key, location.state, loadShopData])
+  }, [location.key, location.state])
+
+  useEffect(() => {
+    const loadProducts = async () => {
+      try {
+        if (selectedCategory === 'all') {
+          const productRes = await api.get('/api/product')
+          setProducts(mapProducts((productRes.data ?? []) as Product[]))
+        } else {
+          const [categoryRes, productRes] = await Promise.all([
+            api.get(`/api/category/${selectedCategory}`),
+            api.get(`/api/product/category/${selectedCategory}`),
+          ])
+
+          const category = categoryRes.data as Category
+          setCategories((prev) => {
+            const exists = prev.some((c) => c.id === category.id)
+            return exists ? prev : [...prev, category]
+          })
+          setProducts(mapProducts((productRes.data ?? []) as Product[]))
+        }
+        setLoadError(null)
+      } catch {
+        setProducts([])
+        setLoadError('Unable to connect to backend. Please start backend and try again.')
+      }
+    }
+
+    loadProducts()
+  }, [selectedCategory])
 
   const q = (searchParams.get('q') ?? '').toLowerCase()
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const passCategory = selectedCategory === 'all' || product.categoryId === selectedCategory
-      const passSearch = q.length === 0 || product.name.toLowerCase().includes(q)
-      return passCategory && passSearch
-    })
-  }, [products, selectedCategory, q])
+  const filteredProducts = useMemo(
+    () => products.filter((product) => q.length === 0 || product.name.toLowerCase().includes(q)),
+    [products, q],
+  )
 
   const selectedCategoryLabel =
     selectedCategory === 'all'
@@ -155,7 +183,15 @@ export default function ShopPage() {
             </article>
           ))}
         </div>
-        {filteredProducts.length === 0 && (
+        {loadError && (
+          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-700">
+            <p>{loadError}</p>
+            <button onClick={loadCategories} className="mt-3 rounded-lg border border-red-300 bg-white px-3 py-1 text-sm font-semibold">
+              Retry
+            </button>
+          </div>
+        )}
+        {!loadError && filteredProducts.length === 0 && (
           <p className="mt-8 rounded-2xl bg-white/80 p-5 text-[var(--rosewood)]">No products available in this collection.</p>
         )}
       </section>

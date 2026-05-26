@@ -5,6 +5,7 @@ import ShopPage from './pages/ShopPage'
 import LoginPage from './pages/LoginPage'
 import CheckoutPage from './pages/CheckoutPage'
 import ProductDetailsPage from './pages/ProductDetailsPage'
+import OrderHistoryPage from './pages/OrderHistoryPage'
 import { AuthProvider } from './contexts/AuthContext'
 import { CartProvider } from './contexts/CartContext'
 import { ToastProvider } from './contexts/ToastContext'
@@ -30,6 +31,8 @@ function App() {
                 <Route path="/catalog/desserts" element={<DessertsCatalogPage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/checkout" element={<CheckoutPage />} />
+                <Route path="/checkout/details" element={<Navigate to="/checkout" replace />} />
+                <Route path="/orders" element={<OrderHistoryPage />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
               <CartDrawer />

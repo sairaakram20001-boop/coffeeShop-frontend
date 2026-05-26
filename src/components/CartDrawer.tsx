@@ -1,43 +1,21 @@
-﻿import { AnimatePresence, motion } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useCart } from '../hooks/useCart'
-import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../hooks/useToast'
-import api from '../services/api'
 import CartItem from './CartItem'
 import Button from './Button'
 
 export default function CartDrawer() {
-  const { isOpen, setIsOpen, items, totalAmount, removeItem, changeItemQuantity, clearCart, refreshCart } = useCart()
-  const { isAuthenticated, userId } = useAuth()
+  const { isOpen, setIsOpen, items, totalAmount, removeItem, changeItemQuantity } = useCart()
   const { notify } = useToast()
   const navigate = useNavigate()
   const [updatingItemId, setUpdatingItemId] = useState<number | null>(null)
 
   const placeOrder = async () => {
-    if (!isAuthenticated || !userId) {
-      navigate('/login', { state: { from: '/checkout', message: 'Please login to complete your order.' } })
-      return
-    }
-
-    const response = await api.post('/api/order/place', { userId })
-    const message = String(response.data?.message ?? '')
-
-    if (message.toLowerCase().includes('failed') || message.toLowerCase().includes('empty')) {
-      notify(message || 'Could not place order.', 'error')
-      return
-    }
-
-    await clearCart()
-    await refreshCart()
     setIsOpen(false)
-    navigate('/shop', {
-      state: {
-        orderSuccess: true,
-        orderMessage: message || 'Thanks for your order.',
-      },
-    })
+    notify('Complete details and place your order from checkout page.', 'info')
+    navigate('/checkout')
   }
 
   return (

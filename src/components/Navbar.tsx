@@ -21,9 +21,18 @@ export default function Navbar() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    Promise.all([api.get('/api/category'), api.get('/api/product')])
-      .then(([categoryRes, productRes]) => {
-        const fetchedCategories = (categoryRes.data ?? []) as Category[]
+    api
+      .get('/api/category')
+      .then((categoryRes) => {
+        setCategories((categoryRes.data ?? []) as Category[])
+      })
+      .catch(() => {
+        setCategories([])
+      })
+
+    api
+      .get('/api/product')
+      .then((productRes) => {
         const fetchedProducts = (productRes.data ?? []) as Product[]
         const nextCounts: Record<number, number> = {}
 
@@ -34,12 +43,10 @@ export default function Navbar() {
           }
         })
 
-        setCategories(fetchedCategories)
         setCategoryCounts(nextCounts)
         setTotalProducts(fetchedProducts.length)
       })
       .catch(() => {
-        setCategories([])
         setCategoryCounts({})
         setTotalProducts(0)
       })
@@ -129,6 +136,7 @@ export default function Navbar() {
             <Link to="/catalog/drinks">Drinks</Link>
             <Link to="/catalog/desserts">Desserts</Link>
             <Link to="/checkout">Checkout</Link>
+            {isAuthenticated && <Link to="/orders">Orders</Link>}
           </div>
           <form onSubmit={onSearch} className="ml-auto hidden items-center rounded-full border border-[var(--stone)]/50 bg-white px-3 md:flex">
             <Search size={16} className="text-[var(--rosewood)]" />
