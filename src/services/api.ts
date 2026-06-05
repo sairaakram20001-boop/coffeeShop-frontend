@@ -37,6 +37,8 @@ api.interceptors.request.use((config) => {
   return config
 })
 
+console.log("VITE_API_BASE_URL =", import.meta.env.VITE_API_BASE_URL)
+
 api.interceptors.response.use(
   (response) => {
     if (!API_BASE_URL) return response
