@@ -3,7 +3,7 @@ import axios from 'axios'
 const envApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
 const isDev = import.meta.env.DEV
 
-const fallbackApiBases = ['http://sairaakram-001-site1.mtempurl.com', 'http://localhost:53691', 'https://localhost:53690']
+const fallbackApiBases = ['http://sairaakram-001-site1.mtempurl.com'] //'http://localhost:53691', 'https://localhost:53690'
 const configuredApiBases = envApiBaseUrl && envApiBaseUrl.length > 0 ? [envApiBaseUrl, ...fallbackApiBases] : fallbackApiBases
 const uniqueApiBases = Array.from(new Set(configuredApiBases.map((url) => url.replace(/\/$/, ''))))
 
