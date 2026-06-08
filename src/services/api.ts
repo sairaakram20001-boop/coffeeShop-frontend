@@ -1,14 +1,14 @@
 import axios from 'axios'
 
 const envApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim()
-const useSameOriginProxy = !envApiBaseUrl
+const isDev = import.meta.env.DEV
 
-const fallbackApiBases = ['https://coffeeshop-backend-production.up.railway.app']
-const configuredApiBases = envApiBaseUrl ? [envApiBaseUrl, ...fallbackApiBases] : fallbackApiBases
+const fallbackApiBases = ['https://coffeeshop-backend-production.up.railway.app'] //'http://localhost:53691', 'https://localhost:53690'
+const configuredApiBases = envApiBaseUrl && envApiBaseUrl.length > 0 ? [envApiBaseUrl, ...fallbackApiBases] : fallbackApiBases
 const uniqueApiBases = Array.from(new Set(configuredApiBases.map((url) => url.replace(/\/$/, ''))))
 
 let activeApiBaseIndex = 0
-export const API_BASE_URL = useSameOriginProxy ? '' : uniqueApiBases[activeApiBaseIndex]
+export const API_BASE_URL = !envApiBaseUrl && isDev ? '' : uniqueApiBases[activeApiBaseIndex]
 
 export const resolveImageUrl = (imageUrl?: string | null): string | undefined => {
   if (!imageUrl) return undefined
